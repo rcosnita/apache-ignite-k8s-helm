@@ -1,0 +1,40 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "apache-ignite.fullname" . }}-zk
+  labels:
+    {{- include "apache-ignite.labels" . | nindent 4 }}
+spec:
+  clusterIP: None 
+  selector:
+    {{- include "apache-ignite.selectorLabelsZk" . | nindent 4 }}
+  ports:
+    - name: client-port
+      protocol: TCP
+      port: 32181
+      targetPort: 32181
+    - name: port-node1-peers1
+      protocol: TCP
+      port: 22888
+      targetPort: 22888
+    - name: port-node1-peers2
+      protocol: TCP
+      port: 23888
+      targetPort: 23888
+    - name: port-node2-peers1
+      protocol: TCP
+      port: 32888
+      targetPort: 32888
+    - name: port-node2-peers2
+      protocol: TCP
+      port: 33888
+      targetPort: 33888
+    - name: port-node3-peers1
+      protocol: TCP
+      port: 42888
+      targetPort: 42888
+    - name: port-node-peers2
+      protocol: TCP
+      port: 43888
+      targetPort: 43888

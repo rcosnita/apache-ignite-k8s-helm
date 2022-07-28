@@ -1,0 +1,91 @@
+{{ $zkServers := "" }}
+{{ $zkServerSuffix := printf "%s-zk" ( include "apache-ignite.fullname" .) }}
+
+{{ $rootCtx := . }}
+
+{{ range until ( .Values.zookeeper.replicas | int ) }}
+  {{ $zkServerHost := printf "%s-zk-%d.%s" ( include "apache-ignite.fullname" $rootCtx ) . $zkServerSuffix }}
+  {{ $zkServer := printf "%s:32181" $zkServerHost }}
+  {{ $zkServers = printf "%s,%s" $zkServers $zkServer }}
+{{ end }}
+
+{{ $zkServersLen := ( $zkServers | len ) | int }}
+{{ $zkServers = $zkServers | substr 1 $zkServersLen }}
+
+{{ $_ := set .Values.ignite "zkServers" $zkServers }}
+{{ $nodeConfig := ( tpl .Values.ignite.config . ) }}
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "apache-ignite.fullname" . }}-ignite
+  labels:
+    {{- include "apache-ignite.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "apache-ignite.fullname" . }}-ignite
+  replicas: {{ .Values.ignite.replicas }}
+  selector:
+    matchLabels:
+      {{- include "apache-ignite.selectorLabelsIgnite" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "apache-ignite.selectorLabelsIgnite" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-ignite
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.ignite.image.repository }}:{{ .Values.ignite.image.tag }}"
+          imagePullPolicy: {{ .Values.ignite.image.pullPolicy }}
+          command: ["bash"]
+          args:
+            - -c
+            - |
+              cd /opt/ignite/apache-ignite
+              cp -R libs/optional/ignite-zookeeper libs/
+              cat <<EOF > /opt/ignite/apache-ignite/config/default-config.xml
+              {{ $nodeConfig | nindent 14 }}EOF
+
+              cat /opt/ignite/apache-ignite/config/default-config.xml
+              ./run.sh
+          resources:
+            {{- toYaml .Values.ignite.resources | nindent 12 }}
+          livenessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 10
+            successThreshold: 1
+            failureThreshold: 2
+            exec:
+              command:
+                - bash
+                - -c 
+                - |
+                  NODE_IP_ADDRESS=$(ifconfig {{ .Values.ignite.primaryEth }} | grep 'inet addr' | cut -d: -f2 | awk '{print $1}')
+                  cd /opt/ignite/apache-ignite/bin
+                  ./ignitevisorcmd.sh -e='open;top' | grep ${NODE_IP_ADDRESS}
+                  echo "liveness probe ended with status code: $?"
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

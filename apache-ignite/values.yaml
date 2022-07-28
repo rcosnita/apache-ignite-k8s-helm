@@ -1,0 +1,57 @@
+zookeeper:
+  replicas: 3
+  resources: {}
+  image:
+    repository: confluentinc/cp-zookeeper
+    pullPolicy: IfNotPresent
+    tag: 6.1.1
+
+ignite:
+  replicas: 3
+  resources: {}
+  image:
+    repository: applem1support/ignite
+    pullPolicy: IfNotPresent
+    tag: 2.12.0
+  config: |
+    <beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+      <bean class="org.apache.ignite.configuration.IgniteConfiguration" id="ignite.cfg">
+        <property name="connectorConfiguration">                                         
+            <bean class="org.apache.ignite.configuration.ConnectorConfiguration">
+              <property name="port" value="10800"/>
+            </bean>
+        </property>
+
+        <property name="discoverySpi">
+          <bean class="org.apache.ignite.spi.discovery.zk.ZookeeperDiscoverySpi">
+            <property name="zkConnectionString" value="{{ .Values.ignite.zkServers }}" />
+            <property name="sessionTimeout" value="30000"/>
+            <property name="zkRootPath" value="/apacheIgnite"/>
+            <property name="joinTimeout" value="10000"/>
+          </bean>
+        </property>
+      </bean>
+    </beans>
+  zkServers: "" # TODO(rcosnita) in the future use this to determine if we must install zk or use an already available one.
+  primaryEth: eth0 # Change this only if you need special networking setup.
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

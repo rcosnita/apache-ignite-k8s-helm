@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "apache-ignite.fullname" . }}-ignite
+  labels:
+    {{- include "apache-ignite.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "apache-ignite.selectorLabelsIgnite" . | nindent 4 }}
+  ports:
+    - name: client-port
+      protocol: TCP
+      port: 10800
+      targetPort: 10800

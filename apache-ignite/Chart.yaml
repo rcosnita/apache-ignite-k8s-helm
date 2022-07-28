@@ -1,0 +1,8 @@
+apiVersion: v2
+name: apache-ignite
+description: A Helm chart for deploying Apache Ignite in HA mode on top of kubernetes.
+
+type: application
+version: 0.1.0
+
+appVersion: "2.12.0"
