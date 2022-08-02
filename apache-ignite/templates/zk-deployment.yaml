@@ -44,8 +44,8 @@ spec:
         - name: {{ .Chart.Name }}-zk
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.zookeeper.image.repository }}:{{ .Values.zookeeper.image.tag }}"
-          imagePullPolicy: {{ .Values.zookeeper.image.pullPolicy }}
+          image: "{{ tpl .Values.zookeeper.image.repository . }}:{{ tpl .Values.zookeeper.image.tag . }}"
+          imagePullPolicy: {{ tpl .Values.zookeeper.image.pullPolicy . }}
           env:
             - name: ZOOKEEPER_CLIENT_PORT
               value: "32181"

@@ -1,6 +1,12 @@
 zookeeper:
   replicas: 3
-  resources: {}
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: 0.5
+    limits:
+      memory: "512Mi"
+      cpu: 1
   image:
     repository: confluentinc/cp-zookeeper
     pullPolicy: IfNotPresent
@@ -8,7 +14,13 @@ zookeeper:
 
 ignite:
   replicas: 3
-  resources: {}
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: 1
+    limits:
+      memory: "3Gi"
+      cpu: 3
   image:
     repository: applem1support/ignite
     pullPolicy: IfNotPresent
@@ -48,7 +60,10 @@ podAnnotations: {}
 
 podSecurityContext: {}
 
-securityContext: {}
+securityContext:
+  allowPrivilegeEscalation: false
+  runAsUser: 1000
+  runAsGroup: 1000
 
 nodeSelector: {}
 

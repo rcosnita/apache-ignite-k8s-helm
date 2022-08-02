@@ -47,8 +47,8 @@ spec:
         - name: {{ .Chart.Name }}-ignite
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.ignite.image.repository }}:{{ .Values.ignite.image.tag }}"
-          imagePullPolicy: {{ .Values.ignite.image.pullPolicy }}
+          image: "{{ tpl .Values.ignite.image.repository . }}:{{ tpl .Values.ignite.image.tag . }}"
+          imagePullPolicy: {{ tpl .Values.ignite.image.pullPolicy . }}
           command: ["bash"]
           args:
             - -c
@@ -76,7 +76,6 @@ spec:
                   NODE_IP_ADDRESS=$(ifconfig {{ .Values.ignite.primaryEth }} | grep 'inet addr' | cut -d: -f2 | awk '{print $1}')
                   cd /opt/ignite/apache-ignite/bin
                   ./ignitevisorcmd.sh -e='open;top' | grep ${NODE_IP_ADDRESS}
-                  echo "liveness probe ended with status code: $?"
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
