@@ -62,6 +62,22 @@ spec:
               ./run.sh
           resources:
             {{- toYaml .Values.ignite.resources | nindent 12 }}
+          readinessProbe:
+            initialDelaySeconds: 10
+            exec:
+              command:
+                - bash
+                - -c
+                - |
+                  NODE_IP_ADDRESS=$(ifconfig {{ .Values.ignite.primaryEth }} | grep 'inet addr' | cut -d: -f2 | awk '{print $1}')
+                  echo 'select 1;' > /tmp/ignite-monitoring.sh
+                  /opt/ignite/apache-ignite/bin/sqlline.sh \
+                    -u "jdbc:ignite:thin://${NODE_IP_ADDRESS}:10800?schema=PUBLIC" \
+                    -n {{ .Values.ignite.credentials.default.username }} \
+                    -p {{ .Values.ignite.credentials.default.password }} \
+                    --run=/tmp/ignite-monitoring.sh
+            initialDelaySeconds: 5
+            periodSeconds: 10
           livenessProbe:
             initialDelaySeconds: 10
             periodSeconds: 10

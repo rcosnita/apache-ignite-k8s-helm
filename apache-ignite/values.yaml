@@ -21,6 +21,10 @@ ignite:
     limits:
       memory: "3Gi"
       cpu: 3
+  credentials:
+    default:
+      username: ignite
+      password: ignite
   image:
     repository: applem1support/ignite
     pullPolicy: IfNotPresent
